@@ -34,5 +34,7 @@ Getting started with this project to get everything running (on fhem):
 
 6. define the module in fhem: define myCO2 ZyAuraCO2
 
-7. done :-)
+7. setting the attr CO2Path to where the ZyAuraCO2 executable is located
+
+8. done :-)
 

@@ -21,8 +21,7 @@ bool finishReading = false;
 	        switch (data.tag)
 	        {
 	          case CO2:
-	              printf("Ambient temparature: %lf C\n", co2_get_celsius_temp(data.value));
-	              fprintf(stdout, "%hd PPM", data.value);
+	              fprintf(stdout, "CO2 concentration:\n%hd PPM\n", data.value);
 	              finishReading = true;
 	              break;
 /*
