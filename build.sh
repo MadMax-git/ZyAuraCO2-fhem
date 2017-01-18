@@ -4,7 +4,7 @@ if [ "$1" = "all" ]; then
 	echo "building all..."
 	mkdir -p ./Debug
 	cd Debug
-	gcc -Wall -g -o $2.o -I../include ../hid.c ../holtekco2.c ../main.c -ludev
+	gcc -Wall -g -o $2.o -I../include ../src/hid.c ../src/holtekco2.c ../src/main.c -ludev
 	cd ..
 	echo "done."
 elif [ "$1" = "clean" ]; then
