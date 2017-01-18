@@ -28,7 +28,7 @@ Getting started with this project to get everything running (on fhem):
 
 3. sudo apt-get update and sudo apt-get install libudev-dev
 
-4. import the c-project into eclipse and call build project OR just build by calling './build.sh all ZyAuraCO2 `pwd`'
+4. import the c-project into eclipse and call build project OR just build by calling "./build.sh all ZyAuraCO2 `pwd`"
 
 5. copy 74_ZyAuraCO2.pm into /opt/fhem/FHEM (when your fhem installation directory is /opt/fhem) and do a shutdown restart of fhem
 
