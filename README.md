@@ -28,13 +28,13 @@ Getting started with this project to get everything running (on fhem):
 
 3. sudo apt-get update and sudo apt-get install libudev-dev
 
-4. import the c-project into eclipse and call build project OR just build by calling "./build.sh all ZyAuraCO2 `pwd`"
+4. import the c-project into eclipse and call build project OR just build by calling  ./build.sh all \<name-of-executable\> \<path-to-act-dir\>
 
 5. copy 74_ZyAuraCO2.pm into /opt/fhem/FHEM (when your fhem installation directory is /opt/fhem) and do a shutdown restart of fhem
 
-6. define the module in fhem: define myCO2 ZyAuraCO2
+6. define the module in fhem: define \<name-of-device\> ZyAuraCO2
 
-7. setting the attr CO2Path to where the ZyAuraCO2 executable is located
+7. set the attr CO2Path to where the ZyAuraCO2 executable is located (\<path-to-act-dir\>/\<name-of-executable\>)
 
 8. done :-)
 
