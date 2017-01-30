@@ -34,7 +34,7 @@ Getting started with this project to get everything running (on fhem):
 
 6. define the module in fhem: define \<name-of-device\> ZyAuraCO2
 
-7. set the attr CO2Path to where the ZyAuraCO2 executable is located (\<path-to-act-dir\>/\<name-of-executable\>)
+7. set the attr CO2Path to where the ZyAuraCO2 executable is located (\<path-to-act-dir\>/Debug/\<name-of-executable\>)
 
 8. done :-)
 
