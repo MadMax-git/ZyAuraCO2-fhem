@@ -168,7 +168,7 @@ sub ZyAuraCO2_stateRequest($)
   my $name = $hash->{NAME};
   my $state = ReadingsVal($name, "state", 0); 
   
-  Log3 $name, 3, "Sub ZyAuraCO2_stateRequest ($name) state: $state";
+  Log3 $name, 5, "Sub ZyAuraCO2_stateRequest ($name) state: $state";
       
   if((ReadingsVal($name, "state", 0) eq "initialized" or ReadingsVal($name, "state", 0) eq "unreachable" or ReadingsVal($name, "state", 0) eq "disabled" or ReadingsVal($name, "state", 0) eq "Unknown") and !IsDisabled($name))
   {
@@ -243,7 +243,7 @@ sub ZyAuraCO2($)
   }
       
   $hash->{helper}{RUNNING_PID} = BlockingCall("ZyAuraCO2_Run", $name, "ZyAuraCO2_Done", 60, "ZyAuraCO2_Aborted", $hash) unless(exists($hash->{helper}{RUNNING_PID}));
-  Log3 $name, 3, "Sub ZyAuraCO2 ($name) - Starte Blocking Call";
+  Log3 $name, 5, "Sub ZyAuraCO2 ($name) - Starte Blocking Call";
   
   if(ReadingsVal($name, "state", 0) eq "active")
   {
@@ -255,7 +255,7 @@ sub ZyAuraCO2_Run($)
 {
   my ($name) = @_;
 
-  Log3 $name, 3, "Sub ZyAuraCO2_Run ($name) - Running nonBlocking";
+  Log3 $name, 5, "Sub ZyAuraCO2_Run ($name) - Running nonBlocking";
 
   ##### Abruf des CO2-Wertes
   my $co2 = ZyAuraCO2_ReadCO2($name);
@@ -263,12 +263,10 @@ sub ZyAuraCO2_Run($)
   ##### Abruf des Temperatur-Wertes
   # TODO
 
-  Log3 $name, 3, "Sub ZyAuraCO2_Run ($name) - Rückgabe an Auswertungsprogramm beginnt / co2: $co2";
+  Log3 $name, 5, "Sub ZyAuraCO2_Run ($name) - Rückgabe an Auswertungsprogramm beginnt / co2: $co2";
 
   return "$name|err"
   unless(defined($co2));
-
-  Log3 $name, 3, "Sub ZyAuraCO2_Run ($name) - co2 definded: $co2";
 
   return "$name|$co2";
 }
@@ -281,18 +279,16 @@ sub ZyAuraCO2_ReadCO2($)
   my $execname = $pathparts[(scalar @pathparts) - 1];
   my $loop = 0;
 
-  Log3 $name, 3, "Sub ZyAuraCO2_ReadCO2 ($name) path: $path  execname: $execname";
+  Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) path: $path  execname: $execname";
 
 #  while((qx(ps ax | grep -v grep | grep "co2") and $loop = 0) or (qx(ps ax | grep -v grep | grep "co2") and $loop < 10))
   while((qx(ps ax | grep -v grep | grep "$execname") and $loop = 0) or (qx(ps ax | grep -v grep | grep "$execname") and $loop < 10))
   {
     printf "\n(Sub ZyAuraCO2_Run) - co2 noch aktiv, wait 0.5s for new check\n";
-    Log3 $name, 3, "Sub ZyAuraCO2_ReadCO2 ($name) already running...";
+    Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) already running...";
     sleep 0.5;
     $loop++;
   }
-
-  Log3 $name, 3, "Sub ZyAuraCO2_ReadCO2 ($name) starting $path";
 
 #TODO: error handling etc.  
   my $readData = qx(sudo $path);
@@ -300,7 +296,7 @@ sub ZyAuraCO2_ReadCO2($)
   my @readDataParts = split(/\n/, $readData);
   $readData = $readDataParts[1];
 
-  Log3 $name, 3, "Sub ZyAuraCO2_ReadCO2 ($name) readData: $readData";
+  Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) readData: $readData";
 
   return $readData;
 }
@@ -311,13 +307,9 @@ sub ZyAuraCO2_Done($)
   my ($name,$response) = split("\\|",$string);
   my $hash = $defs{$name};
 
-  Log3 $name, 3, "Sub ZyAuraCO2_Done ($name) - 1";
-  
   delete($hash->{helper}{RUNNING_PID});
   
-  Log3 $name, 3, "Sub ZyAuraCO2_Done ($name) - 2";
-  
-  Log3 $name, 3, "Sub ZyAuraCO2_Done ($name) - Der Helper ist disabled. Daher wird hier abgebrochen" if($hash->{helper}{DISABLED});
+  Log3 $name, 5, "Sub ZyAuraCO2_Done ($name) - Der Helper ist disabled. Daher wird hier abgebrochen" if($hash->{helper}{DISABLED});
 
   return if($hash->{helper}{DISABLED});
 
@@ -327,8 +319,6 @@ sub ZyAuraCO2_Done($)
     return undef;
   }
 
-  Log3 $name, 3, "Sub ZyAuraCO2_Done ($name) - 3";
-  
   readingsBeginUpdate($hash);
   readingsBulkUpdate($hash, "CO2", $response);
   if(ReadingsVal($name,"state", 0) eq "call data" or ReadingsVal($name,"state", 0) eq "unreachable")
@@ -337,7 +327,7 @@ sub ZyAuraCO2_Done($)
   }  
   readingsEndUpdate($hash,1);
   
-  Log3 $name, 3, "Sub ZyAuraCO2_Done ($name) - Abschluss!";
+  Log3 $name, 5, "Sub ZyAuraCO2_Done ($name) - Abschluss!";
 }
 
 sub ZyAuraCO2_Aborted($)
