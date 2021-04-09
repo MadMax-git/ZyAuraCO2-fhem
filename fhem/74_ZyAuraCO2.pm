@@ -39,7 +39,7 @@ use POSIX;
 #use JSON;
 use Blocking;
 
-my $version = "0.0.1";
+my $version = "0.0.5";
 
 sub ZyAuraCO2_Initialize($)
 {
@@ -52,6 +52,7 @@ sub ZyAuraCO2_Initialize($)
   $hash->{AttrList} = "interval ".
                       "CO2ReadData:both,temp,co2 ".
                       "CO2Path ".
+                      "CO2sshHost ".
                       "disable:1 ".
                       "disabledForIntervals ".
                       $readingFnAttributes;
@@ -267,6 +268,8 @@ sub ZyAuraCO2_Run($)
 
   return "$name|err"
   unless(defined($co2));
+  
+  Log3 $name, 5, "Sub ZyAuraCO2_Run ($name) - co2 definded: $co2";
 
   return "$name|$co2";
 }
@@ -275,23 +278,47 @@ sub ZyAuraCO2_ReadCO2($)
 {
   my ($name) = @_;
   my $path = AttrVal($name, "CO2Path", "/usr/bin/ZyAuraCO2");
+  my $sshHost = AttrVal($name, "CO2sshHost", "n.a.");
   my @pathparts = split(/\//, $path);
   my $execname = $pathparts[(scalar @pathparts) - 1];
+  my $cmdExec = "";
+  my $cmdGrep = "";
   my $loop = 0;
 
   Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) path: $path  execname: $execname";
+  
+  if($sshHost ne "n.a.")
+  {
+    $sshHost =~ s/@/\\@/g;
+
+    $cmdExec = "ssh $sshHost \"sudo $path\"";
+
+    $cmdGrep = "ssh $sshHost \"ps ax | grep -v grep | grep \"$execname\"\"";
+  }
+  else
+  {
+    $cmdExec = "sudo $path";
+  }
 
 #  while((qx(ps ax | grep -v grep | grep "co2") and $loop = 0) or (qx(ps ax | grep -v grep | grep "co2") and $loop < 10))
-  while((qx(ps ax | grep -v grep | grep "$execname") and $loop = 0) or (qx(ps ax | grep -v grep | grep "$execname") and $loop < 10))
+# TODO: change for ssh!!
+#  while((qx(ps ax | grep -v grep | grep "$execname") and $loop = 0) or (qx(ps ax | grep -v grep | grep "$execname") and $loop < 10))
+  while((qx($cmdGrep) and $loop = 0) or (qx($cmdGrep) and $loop < 20))
   {
-    printf "\n(Sub ZyAuraCO2_Run) - co2 noch aktiv, wait 0.5s for new check\n";
+#    printf "\n(Sub ZyAuraCO2_Run) - co2 noch aktiv, wait 0.5s for new check\n";
     Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) already running...";
     sleep 0.5;
     $loop++;
   }
 
+  Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) starting $cmdExec";
+
 #TODO: error handling etc.  
-  my $readData = qx(sudo $path);
+#  my $readData = qx(sudo $path);
+
+#  my $readData = qx(ssh pi\@192.168.1.90 "sudo /home/pi/ZyAuraCO2-fhem/Debug/ZyAuraCO2");
+#  my $readData = qx($cmdExec);
+  my $readData = qx($cmdExec);
   
   my @readDataParts = split(/\n/, $readData);
   $readData = $readDataParts[1];
@@ -307,7 +334,11 @@ sub ZyAuraCO2_Done($)
   my ($name,$response) = split("\\|",$string);
   my $hash = $defs{$name};
 
+  Log3 $name, 5, "Sub ZyAuraCO2_Done ($name) - 1";
+  
   delete($hash->{helper}{RUNNING_PID});
+  
+  Log3 $name, 5, "Sub ZyAuraCO2_Done ($name) - 2";
   
   Log3 $name, 5, "Sub ZyAuraCO2_Done ($name) - Der Helper ist disabled. Daher wird hier abgebrochen" if($hash->{helper}{DISABLED});
 
@@ -319,6 +350,8 @@ sub ZyAuraCO2_Done($)
     return undef;
   }
 
+  Log3 $name, 5, "Sub ZyAuraCO2_Done ($name) - 3";
+  
   readingsBeginUpdate($hash);
   readingsBulkUpdate($hash, "CO2", $response);
   if(ReadingsVal($name,"state", 0) eq "call data" or ReadingsVal($name,"state", 0) eq "unreachable")
