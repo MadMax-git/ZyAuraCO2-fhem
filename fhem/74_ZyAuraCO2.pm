@@ -36,10 +36,9 @@ use strict;
 use warnings;
 use POSIX;
 
-#use JSON;
 use Blocking;
 
-my $version = "0.0.5";
+my $version = "0.0.6";
 
 sub ZyAuraCO2_Initialize($)
 {
@@ -264,7 +263,14 @@ sub ZyAuraCO2_Run($)
   ##### Abruf des Temperatur-Wertes
   # TODO
 
-  Log3 $name, 5, "Sub ZyAuraCO2_Run ($name) - Rückgabe an Auswertungsprogramm beginnt / co2: $co2";
+  if(defined $co2)
+  {
+    Log3 $name, 5, "Sub ZyAuraCO2_Run ($name) - Rückgabe an Auswertungsprogramm beginnt / co2: $co2";
+  }
+  else
+  {
+    Log3 $name, 3, "Sub ZyAuraCO2_Run ($name) - Rückgabe an Auswertungsprogramm. Fehler beim Lesen von co2.";
+  }
 
   return "$name|err"
   unless(defined($co2));
@@ -291,21 +297,20 @@ sub ZyAuraCO2_ReadCO2($)
   {
     $sshHost =~ s/@/\\@/g;
 
-    $cmdExec = "ssh $sshHost \"sudo $path\"";
+#    $cmdExec = "ssh $sshHost \"sudo $path\"";
+    $cmdExec = "ssh $sshHost \"sudo $path\" 2>/dev/null";
 
-    $cmdGrep = "ssh $sshHost \"ps ax | grep -v grep | grep \"$execname\"\"";
+#    $cmdGrep = "ssh $sshHost \"ps ax | grep -v grep | grep \"$execname\"\"";
+    $cmdGrep = "ssh $sshHost \"ps ax | grep -v grep | grep \"$execname\"\" 2>/dev/null";
   }
   else
   {
-    $cmdExec = "sudo $path";
+#    $cmdExec = "sudo $path";
+    $cmdExec = "sudo $path  2>/dev/null";
   }
 
-#  while((qx(ps ax | grep -v grep | grep "co2") and $loop = 0) or (qx(ps ax | grep -v grep | grep "co2") and $loop < 10))
-# TODO: change for ssh!!
-#  while((qx(ps ax | grep -v grep | grep "$execname") and $loop = 0) or (qx(ps ax | grep -v grep | grep "$execname") and $loop < 10))
   while((qx($cmdGrep) and $loop = 0) or (qx($cmdGrep) and $loop < 20))
   {
-#    printf "\n(Sub ZyAuraCO2_Run) - co2 noch aktiv, wait 0.5s for new check\n";
     Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) already running...";
     sleep 0.5;
     $loop++;
@@ -314,16 +319,19 @@ sub ZyAuraCO2_ReadCO2($)
   Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) starting $cmdExec";
 
 #TODO: error handling etc.  
-#  my $readData = qx(sudo $path);
-
-#  my $readData = qx(ssh pi\@192.168.1.90 "sudo /home/pi/ZyAuraCO2-fhem/Debug/ZyAuraCO2");
-#  my $readData = qx($cmdExec);
   my $readData = qx($cmdExec);
   
   my @readDataParts = split(/\n/, $readData);
   $readData = $readDataParts[1];
 
-  Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) readData: $readData";
+  if(defined $readData)
+  {
+    Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) readData: $readData";
+  }
+  else
+  {
+    Log3 $name, 5, "Sub ZyAuraCO2_ReadCO2 ($name) readData failed.";
+  }
 
   return $readData;
 }
@@ -346,7 +354,11 @@ sub ZyAuraCO2_Done($)
 
   if($response eq "err")
   {
-    readingsSingleUpdate($hash,"state","unreachable", 1);
+#    readingsSingleUpdate($hash,"state","unreachable", 1);
+    readingsBeginUpdate($hash);
+    readingsBulkUpdate($hash, "state", "unreachable");
+    readingsBulkUpdate($hash, "CO2", "error");
+    readingsEndUpdate($hash,1);
     return undef;
   }
 
