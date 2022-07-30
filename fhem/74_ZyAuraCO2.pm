@@ -38,7 +38,7 @@ use POSIX;
 
 use Blocking;
 
-my $version = "0.0.6";
+my $version = "0.0.7";
 
 sub ZyAuraCO2_Initialize($)
 {
@@ -52,6 +52,7 @@ sub ZyAuraCO2_Initialize($)
                       "CO2ReadData:both,temp,co2 ".
                       "CO2Path ".
                       "CO2sshHost ".
+                      "timeout ".
                       "disable:1 ".
                       "disabledForIntervals ".
                       $readingFnAttributes;
@@ -236,14 +237,15 @@ sub ZyAuraCO2($)
 {
   my ($hash) = @_;
   my $name = $hash->{NAME};
+  my $timeout = AttrNum($name, "timeout", 120);
 
   if(defined($hash->{helper}{RUNNING_PID}))
   {
     BlockingKill($hash->{helper}{RUNNING_PID});
   }
       
-  $hash->{helper}{RUNNING_PID} = BlockingCall("ZyAuraCO2_Run", $name, "ZyAuraCO2_Done", 60, "ZyAuraCO2_Aborted", $hash) unless(exists($hash->{helper}{RUNNING_PID}));
-  Log3 $name, 5, "Sub ZyAuraCO2 ($name) - Starte Blocking Call";
+  $hash->{helper}{RUNNING_PID} = BlockingCall("ZyAuraCO2_Run", $name, "ZyAuraCO2_Done", $timeout, "ZyAuraCO2_Aborted", $hash) unless(exists($hash->{helper}{RUNNING_PID}));
+  Log3 $name, 5, "Sub ZyAuraCO2 ($name) - Blocking Call started with timeout of $timeout s.";
   
   if(ReadingsVal($name, "state", 0) eq "active")
   {
