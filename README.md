@@ -38,3 +38,8 @@ Getting started with this project to get everything running (on fhem):
 
 8. done :-)
 
+Remarks:
+now also supporting newer CO2 devices which do not have encryption in place anymore.
+Just add the parameter -n when calling the program for those.
+Older devices: just call the program without anything like before.
+
