@@ -155,6 +155,28 @@ CO2_LIB_EXPORT co2_device_data co2_read_data(co2_device *device){
     return result;
 }
 
+CO2_LIB_EXPORT co2_device_data co2_read_data_undecrypted(co2_device *device){
+    co2_device_data result = {0};
+    uint8_t buf[8] = {0};
+    int res = hid_read(device, buf, 8);
+    if (res == 8){
+//        co2_decrypt_buf(key, buf);
+        bool valid = true;
+        valid &= buf[4]==0x0d;
+        uint8_t sum = buf[0] + buf[1] + buf[2];
+        valid &= sum==buf[3];
+
+        result.tag = buf[0];
+        result.value = ((uint16_t)buf[1])<<8|buf[2];
+        result.checksum = buf[3];
+        result.valid = valid;
+
+//        fprintf(stderr, "%02hhx %02hhx %02hhx %02hhx %02hhx\n", buf[0],buf[1],buf[2],buf[3],buf[4]); //debug output
+//        fprintf(stderr, "Tag: %02hhx; Value: %04hx\n",  result.tag, result.value);                   //debug output
+    }
+    return result;
+}
+
 CO2_LIB_EXPORT int co2_raw_read_decode_data(co2_device *device, uint8_t buffer[8]){
     int res = hid_read(device, buffer, 8);
     co2_decrypt_buf(key, buffer);

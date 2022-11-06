@@ -4,6 +4,9 @@
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
+ *
+ * jo: added a version of read_data w/o decryption for newer
+ *     versions of CO2 devices
  */
 
 #ifndef HOLTEKCO2_H
@@ -172,6 +175,7 @@ extern "C" {
      *  @returns #co2_device_data structure containing data/operation tag, value(as is), checksum and valid flag
      */
     CO2_LIB_EXPORT co2_device_data co2_read_data(co2_device *device);
+    CO2_LIB_EXPORT co2_device_data co2_read_data_undecrypted(co2_device *device);
 
     CO2_LIB_EXPORT int co2_raw_read_decode_data(co2_device *device, uint8_t buffer[8]);
     CO2_LIB_EXPORT int co2_raw_read_data(co2_device *device, uint8_t buffer[8]);
